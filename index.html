@@ -1,0 +1,41 @@
+
+<html>
+    <head>
+        <script src="http://cdn.jsdelivr.net/bluebird/3.5.0/bluebird.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+        <script src="Logo.js"></script>
+        <style>
+            body, html{
+                margin: 0;
+                padding:0;
+            }
+            canvas{
+                border:1px solid red;
+            }
+        </style>
+    </head>
+    <body>
+        <ul id='cmds'></ul>
+        <script>
+            "use strict";
+
+            Logo.draw("rpttargets [fd 1]", {consume:function(cmd){
+                if(cmd.type === "command"){
+                    var el = document.createElement("li");
+                    el.innerHTML = JSON.stringify(cmd);
+                    document.getElementById("cmds").append(el);
+                }
+                else if(cmd.type === "error"){
+                    console.log("ERROR", cmd);
+                }
+            }})
+            .then(function(){
+                console.log('done');
+            })
+            .catch(function(){
+                console.log('error', arguments);
+            });
+        </script>
+    </body>
+</html>
+

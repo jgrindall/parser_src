@@ -42,6 +42,11 @@ sep* f25:setstmt sep*
 return f25;
 }
 /
+sep* rt:rpttargetsstmt sep*
+{
+return {type:"insidestmt", children:[rt]};
+}
+/
 sep* f3:rptstmt sep*
 {
 return {type:"insidestmt", children:[f3]};
@@ -106,6 +111,7 @@ sep* f5:callfnstmt sep*
 //TODO - why ?
 return {type:"insidestmt", children:[f5]};
 }
+
 
 
 stopstmt = sep* "stop" sep*
@@ -241,6 +247,11 @@ return {type:"setxy", children:[numx,numy]};
 rptstmt  = 'rpt' sep* num:expression sep* '[' sep* list:insidefnlist sep* ']' sep*
 {
 return {type:"rptstmt", children:[num,list]};
+}
+
+rpttargetsstmt  = 'rpttargets' sep* '[' sep* list:insidefnlist sep* ']' sep*
+{
+return {type:"rpttargetsstmt", children:[list]};
 }
 
 insidefnlist = sep* l:insidestmt*

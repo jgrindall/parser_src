@@ -1,7 +1,7 @@
 const Stack = 					require("./Stack");
 const SymTable = 				require("./SymTable");
 
-var stack, symTable, _active = false, _consumer;
+var stack, symTable, _active = false, _consumer, _target, _targets = [0, 1, 2];
 
 Promise.resolveLater = function(){
 	if(!_active){
@@ -24,7 +24,12 @@ function resolveLater(resolve, reject){
 		else{
 			resolve();
 		}
-	}, 50);
+	}, 0);
+}
+
+function postError(msg){
+	throw new Error(msg);
+	postMessage({"type":"error", "msg":msg});
 }
 
 function postMessage(s){
@@ -54,20 +59,20 @@ function visitmakestmt(node){
 	var ch, name;
 	ch = node.children;
 	name = ch[0].name;
-	visitNode( ch[1] );
-	symTable.add(name, stack.pop());
-	return Promise.resolveLater();
+	return visitNode( ch[1] ).then(function(){
+		_test();
+		symTable.add(name, stack.pop());
+	});
 }
 
 function visitfdstmt(node){
 	return visitchildren(node)
 	.then(function(){
 		_test();
-		var amount = stack.pop();
-		postMessage({ "type":"command", "name":"fd", "amount":amount });
+		postMessage({ "type":"command", "name":"fd", "amount":stack.pop(), "target":symTable.getTarget() });
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -79,7 +84,7 @@ function visitarcstmt(node){
 		postMessage({ "type":"command", "name":"arc", "angle":amount2, "radius":amount1 });
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -91,7 +96,7 @@ function visitarcrtstmt(node){
 		postMessage({ "type":"command", "name":"arcrt", "angle":amount2, "radius":amount1 });
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -103,7 +108,7 @@ function visitarcltstmt(node){
 		postMessage({ "type":"command", "name":"arclt", "angle":amount2, "radius":amount1 });
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -115,7 +120,7 @@ function visitbkstmt(node){
 		postMessage({ "type":"command", "name":"fd", "amount": -1 * amount });
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -156,7 +161,7 @@ function visitthickstmt(node){
 		postMessage({ "type":"command", "name":"thick", "amount":thick });
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -173,7 +178,7 @@ function visitbooleanstmt(node){
 		}
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -194,7 +199,7 @@ function visitcompoundbooleanstmt(node){
 		}
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -237,7 +242,7 @@ function visitbooleanval(node){
 		postMessage({ "type":"command", "name":"fd", "amount":amount });
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -266,7 +271,7 @@ function visitexpression(node){
 		stack.push(num);
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -281,7 +286,7 @@ function visitmultexpression(node){
 		stack.push(num);
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -291,18 +296,32 @@ function visitdivterm(node){
 		_test();
 		var num = stack.pop();
 		if(num === 0){
-			runTimeError("Division by zero");
+			postError("Division by zero");
 		}
 		else{
 			stack.push(1/num);
 		}
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
+function visitrpttargetsstmt(node){
+	var makePromise = function(i){
+		return new Promise(function(resolve, reject){
+			_test();
+			symTable.setTarget(i);
+			visitNode(ch1).then(function(){
+				resolveLater(resolve, reject);
+			});
+		});
+	}
+	return Promise.each(_targets, makePromise);
+}
+
 function visitrptstmt(node){
+	console.log("rpt");
 	var ch0, ch1, i = -1;
 	ch0 = node.children[0];
 	ch1 = node.children[1];
@@ -310,6 +329,7 @@ function visitrptstmt(node){
 		return new Promise(function(resolve, reject){
 			_test();
 			symTable.add("repcount", i);
+			console.log(JSON.stringify(ch1));
 			visitNode(ch1).then(function(){
 				resolveLater(resolve, reject);
 			});
@@ -319,10 +339,11 @@ function visitrptstmt(node){
 	.then(function(){
 		_test();
 		var num = parseInt(stack.pop(), 10);
+		console.log(num);
 		return Promise.each(_.range(num), makePromise);
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -356,7 +377,7 @@ function visitrtstmt(node){
 		postMessage({"type":"command", "name":"rt", "amount":amount });
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -369,7 +390,7 @@ function visitltstmt(node){
 		postMessage({"type":"command", "name":"rt", "amount": -1 * amount });
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -387,7 +408,7 @@ function visittimesordivterms(node){
 		stack.push(num);
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -425,7 +446,7 @@ function visitusevar(node){
 	var num = symTable.get(node.name);
 	_test();
 	if(num === null || num === undefined){
-		runTimeError("Variable '"+node.name+"' not found.");
+		postError("Variable '"+node.name+"' not found.");
 	}
 	else{
 		stack.push(num);
@@ -442,7 +463,7 @@ function visitsetxy(node){
 		postMessage({ "type":"command", "name":"setxy", "amountX":amountX, "amountY":amountY });
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -476,11 +497,11 @@ function visitsqrtexpression(node){
 			stack.push(Math.sqrt(amount));
 		}
 		else{
-			runTimeError("You took the square root of a negative number");
+			postError("You took the square root of a negative number");
 		}
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -492,7 +513,7 @@ function visitsinexpression(node){
 		stack.push(Math.sin(amount*Math.PI/180));
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -504,7 +525,7 @@ function visitcosexpression(node){
 		stack.push(Math.cos(amount*Math.PI/180));
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -516,7 +537,7 @@ function visittanexpression(node){
 		stack.push(Math.tan(amount*Math.PI/180));
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -528,7 +549,7 @@ function visitminusexpression(node){
 		stack.push(-1*num);
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -549,7 +570,7 @@ function visitnegate(node){
 		stack.push(-1*num);
 	})
 	.catch(function(e){
-		postMessage("caught : " + e);
+		postError("caught : " + e);
 	});
 }
 
@@ -566,7 +587,7 @@ function visitcallfnstmt(node){
 			if(numArgs == 0 || numArgs >= 2){
 				args += "s"
 			}
-			runTimeError("Function '"+name+"' has "+numArgs+" "+args+", but you sent "+numSupplied);
+			postError("Function '"+name+"' has "+numArgs+" "+args+", but you sent "+numSupplied);
 		}
 		else{
 			symTable.enterBlock();
@@ -583,14 +604,14 @@ function visitcallfnstmt(node){
 							console.log("caught stop");
 						}
 						else{
-							runTimeError(e.message);
+							postError(e.message);
 						}
 					});
 			});
 		}
 	}
 	else{
-		runTimeError("Function '"+name+"' not found");
+		postError("Function '"+name+"' not found");
 	}
 }
 
@@ -612,14 +633,9 @@ function executeFunction(f){
 	return visitNode(f.statementsNode);
 }
 
-function runTimeError(msg){
-	throw new Error(msg);
-	postMessage({"type":"error", "message":msg });
-}
-
 function visitNode(node){
 	var t = node.type;
-	//console.log("visitNode", t);
+	console.log("visitNode", t);
 	if(t=="start"){
 		return visitstart(node);
 	}

@@ -1,6 +1,7 @@
 var SymTable = function(){
 	this.blocks = [ ];
 	this.functions = {};
+	this.target = null;
 };
 
 SymTable.prototype.getCurrentBlock = function(){
@@ -26,6 +27,15 @@ SymTable.prototype.get = function(name){
 		}
 	}
 	return null;
+};
+
+SymTable.prototype.getTarget = function(){
+	return this.target;
+};
+
+SymTable.prototype.setTarget = function(i){
+	alert("set" + i)
+	this.target = i;
 };
 
 SymTable.prototype.add = function(name, val){
