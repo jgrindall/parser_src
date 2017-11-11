@@ -1,7 +1,9 @@
 const Logo = 				require('./Logo.js');
+const STR =                 "rpttargets [fd 1]";
 
+console.log(JSON.stringify(Logo.getTree(STR)));
 
-Logo.draw("rpttargets [fd 1]", {consume:function(cmd){
+Logo.draw(STR, {consume:function(cmd){
     if(cmd.type === "command"){
         console.log(cmd);
     }

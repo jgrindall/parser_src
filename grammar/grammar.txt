@@ -17,58 +17,59 @@ insidestmt
 
 insidestmt =
 
-sep* f1:fdstmt sep*
+sep* c:fdstmt sep*
 {
-return {type:"insidestmt", children:[f1]};
+return {type:"insidestmt", children:[c]};
 }
 /
-sep* b1:bkstmt sep*
+sep* c:bkstmt sep*
 {
-return {type:"insidestmt", children:[b1]};
+return {type:"insidestmt", children:[c]};
 }
 /
-sep* f2:rtstmt sep*
+sep* c:rtstmt sep*
 {
-return {type:"insidestmt", children:[f2]};
+return {type:"insidestmt", children:[c]};
 }
 /
-sep* l2:ltstmt sep*
+sep* c:ltstmt sep*
 {
-return {type:"insidestmt", children:[l2]};
+return {type:"insidestmt", children:[c]};
 }
 /
-sep* f25:setstmt sep*
+sep* c:setstmt sep*
 {
-return f25;
+return c;
 }
 /
-sep* rt:rpttargetsstmt sep*
+sep* c:rptstmt sep*
 {
-return {type:"insidestmt", children:[rt]};
+return {type:"insidestmt", children:[c]};
 }
 /
-sep* f3:rptstmt sep*
+sep* c:rpttargetsstmt sep*
 {
-return {type:"insidestmt", children:[f3]};
+return {type:"insidestmt", children:[c]};
 }
 /
-sep* f4:makestmt sep*
+sep* c:makestmt sep*
 {
-return {type:"insidestmt", children:[f4]};
+return {type:"insidestmt", children:[c]};
 }
 /
-sep* h:homestmt sep*
+sep* c:homestmt sep*
 {
-return h;
-}
-/sep* p:penupstmt sep*
-{
-return p;
+return c;
 }
 /
-sep* p:pendownstmt sep*
+sep* c:penupstmt sep*
 {
-return p;
+return c;
+}
+/
+sep* c:pendownstmt sep*
+{
+return c;
 }
 /
 sep* c:colorstmt sep*
@@ -76,40 +77,39 @@ sep* c:colorstmt sep*
 return c;
 }
 /
-sep* lb:labelstmt sep*
+sep* c:labelstmt sep*
 {
-return lb;
+return c;
 }
 /
-sep* b:bgstmt sep*
+sep* c:bgstmt sep*
 {
-return b;
+return c;
 }
 /
-sep* t:thickstmt sep*
+sep* c:thickstmt sep*
 {
-return t;
+return c;
 }
 /
-sep* f6:booleanstmt sep*
+sep* c:booleanstmt sep*
 {
-return f6;
+return c;
 }
 /
-sep* f7:compoundbooleanstmt sep*
+sep* c:compoundbooleanstmt sep*
 {
-return f7;
+return c;
 }
 /
-sep* s:stopstmt sep*
+sep* c:stopstmt sep*
 {
-	return s;
+return c;
 }
 /
-sep* f5:callfnstmt sep*
+sep* c:callfnstmt sep*
 {
-//TODO - why ?
-return {type:"insidestmt", children:[f5]};
+return {type:"insidestmt", children:[c]};
 }
 
 

@@ -10,7 +10,7 @@
   	"license": "BSD",
   	"dependencies": {
     	"pegjs": "latest",
-      "browserify":"latest"
+      "browserify":"latest",
+      "bluebird":"latest"
   	}
 }
-

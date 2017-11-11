@@ -1,5 +1,7 @@
 const Stack = 					require("./Stack");
 const SymTable = 				require("./SymTable");
+const _ = 						require("underscore");
+const Promise = 				require("bluebird");
 
 var stack, symTable, _active = false, _consumer, _target, _targets = [0, 1, 2];
 
@@ -308,11 +310,13 @@ function visitdivterm(node){
 }
 
 function visitrpttargetsstmt(node){
-	var makePromise = function(i){
+	var ch, makePromise;
+	ch = node.children[0];
+	makePromise = function(i){
 		return new Promise(function(resolve, reject){
 			_test();
 			symTable.setTarget(i);
-			visitNode(ch1).then(function(){
+			visitNode(ch).then(function(){
 				resolveLater(resolve, reject);
 			});
 		});
@@ -321,11 +325,10 @@ function visitrpttargetsstmt(node){
 }
 
 function visitrptstmt(node){
-	console.log("rpt");
-	var ch0, ch1, i = -1;
+	var ch0, ch1, i = -1, makePromise;
 	ch0 = node.children[0];
 	ch1 = node.children[1];
-	var makePromise = function(i){
+	makePromise = function(i){
 		return new Promise(function(resolve, reject){
 			_test();
 			symTable.add("repcount", i);
@@ -635,7 +638,6 @@ function executeFunction(f){
 
 function visitNode(node){
 	var t = node.type;
-	console.log("visitNode", t);
 	if(t=="start"){
 		return visitstart(node);
 	}
@@ -680,6 +682,9 @@ function visitNode(node){
 	}
 	else if(t=="rptstmt"){
 		return visitrptstmt(node);
+	}
+	else if(t=="rpttargetsstmt"){
+		return visitrpttargetsstmt(node);
 	}
 	else if(t=="makestmt"){
 		return visitmakestmt(node);

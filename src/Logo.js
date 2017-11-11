@@ -24,5 +24,6 @@ module.exports = {
 	},
 	"stop":function(){
 		Visit.stop();
-	}
+	},
+	"version":"%%VERSION%%"
 };

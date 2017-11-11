@@ -34,7 +34,7 @@ SymTable.prototype.getTarget = function(){
 };
 
 SymTable.prototype.setTarget = function(i){
-	alert("set" + i)
+	console.log("set" + i)
 	this.target = i;
 };
 
