@@ -7388,7 +7388,7 @@ module.exports = {
 	"stop":function(){
 		Visit.stop();
 	},
-	"version":"11/11/2017, 10:10:07 PM"
+	"version":"11/11/2017, 10:19:06 PM"
 };
 
 },{"./Parser":5,"./Visit":8}],5:[function(require,module,exports){
