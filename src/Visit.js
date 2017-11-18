@@ -3,7 +3,7 @@ const SymTable = 				require("./SymTable");
 const _ = 						require("underscore");
 const Promise = 				require("bluebird");
 
-var stack, symTable, _active = false, _consumer, _target, _targets = [0, 1, 2];
+var stack, symTable, _active = false, _consumer, _target;
 
 Promise.resolveLater = function(){
 	if(!_active){
@@ -12,13 +12,23 @@ Promise.resolveLater = function(){
 	return Promise.resolve();
 };
 
+function _delay(t) {
+	var res = function(resolve, reject) {
+    	resolveLater(resolve, reject, t);
+	};
+	return new Promise(res);
+}
+
 function _test(){
 	if(!_active){
 		throw "error";
 	}
 }
 
-function resolveLater(resolve, reject){
+function resolveLater(resolve, reject, t){
+	if(typeof t === 'undefined'){
+		t = 0;
+	}
 	setTimeout(function(){
 		if(!_active){
 			reject("stop");
@@ -26,7 +36,7 @@ function resolveLater(resolve, reject){
 		else{
 			resolve();
 		}
-	}, 0);
+	}, t);
 }
 
 function postError(msg){
@@ -793,14 +803,46 @@ function visitNode(node){
 	}
 }
 
+function setup(){
+	var setupTarget = function(target){
+		symTable.setTarget(target);
+		var fns = _.values(symTable.setups) || [];
+		return Promise.each(fns, executeFunction);
+	};
+	console.log('t', _targets);
+	return Promise.each(_targets, setupTarget);
+}
+
+function rundaemons(){
+	var tick, loop, tickTarget;
+	tick = function(){
+		return Promise.each(_targets, tickTarget);
+	};
+	tickTarget = function(target){
+		symTable.setTarget(target);
+		var fns = _.values(symTable.daemons) || [];
+		return Promise.each(fns, executeFunction);
+	};
+	loop = function(){
+		return tick().then(function(){
+			return _delay(0).then(loop);
+		});
+	};
+	return loop();
+}
+
 module.exports = {
-	"start": function(tree, consumer){
+	"start": function(tree, consumer, targets){
 		_active = true;
 		_consumer = consumer;
+		_targets = targets;
+		console.log('t0', _targets);
 		stack = new Stack();
 		symTable = new SymTable();
 		console.log("start", tree);
-		return visitNode(tree);
+		return visitNode(tree)
+			.then(setup)
+			.then(rundaemons);
 	},
 	"stop":function(){
 		_active = false;

@@ -1,6 +1,8 @@
 var SymTable = function(){
 	this.blocks = [ ];
 	this.functions = {};
+	this.setups = {};
+	this.daemons = {};
 	this.target = null;
 };
 
@@ -34,7 +36,7 @@ SymTable.prototype.getTarget = function(){
 };
 
 SymTable.prototype.setTarget = function(i){
-	console.log("set" + i)
+	console.log("set target " + i)
 	this.target = i;
 };
 
@@ -43,7 +45,17 @@ SymTable.prototype.add = function(name, val){
 };
 
 SymTable.prototype.addFunction = function(name, argsNode, statementsNode){
-	this.functions[name] = {"argsNode":argsNode, "statementsNode":statementsNode};
+	var obj = {
+		"argsNode":argsNode,
+		"statementsNode":statementsNode
+	};
+	this.functions[name] = obj;
+	if(name.indexOf("-setup") >= 0){
+		this.setups[name] = obj;
+	}
+	if(name.indexOf("-daemon") >= 0){
+		this.daemons[name] = obj;
+	}
 };
 
 SymTable.prototype.getFunction = function(name){

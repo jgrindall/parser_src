@@ -16,10 +16,10 @@ module.exports = {
 	"getTree":function(logo){
 		return _getTree(logo);
 	},
-	"draw":function(logo, consumer){
+	"draw":function(logo, consumer, targets){
 		var tree = _getTree(logo);
 		if(tree && consumer){
-			return Visit.start(tree, consumer);
+			return Visit.start(tree, consumer, targets);
 		}
 	},
 	"stop":function(){
