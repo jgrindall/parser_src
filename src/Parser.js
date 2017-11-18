@@ -382,7 +382,7 @@
         peg$c188 = "activate-daemon",
         peg$c189 = peg$literalExpectation("activate-daemon", false),
         peg$c190 = function(f) {
-        return {type:"activatedaemonstmt", children:[f]};
+        return {type:"activatedaemonstmt", name:f.name};
         },
         peg$c191 = "fd",
         peg$c192 = peg$literalExpectation("fd", false),
@@ -415,7 +415,7 @@
         peg$c211 = "setxy",
         peg$c212 = peg$literalExpectation("setxy", false),
         peg$c213 = function(numx, numy) {
-        return {type:"setxy", children:[numx,numy]};
+        return {type:"setxy", children:[numx, numy]};
         },
         peg$c214 = "rpt",
         peg$c215 = peg$literalExpectation("rpt", false),

@@ -1,5 +1,6 @@
 const Stack = 					require("./Stack");
 const SymTable = 				require("./SymTable");
+const Target = 					require("./Target");
 const _ = 						require("underscore");
 const Promise = 				require("bluebird");
 
@@ -10,6 +11,12 @@ Promise.resolveLater = function(){
 		return Promise.reject();
 	}
 	return Promise.resolve();
+};
+
+function _parseTargets(targets){
+	return _.map(targets, function(t){
+		return new Target(t);
+	});
 };
 
 function _delay(t) {
@@ -45,6 +52,8 @@ function postError(msg){
 }
 
 function postMessage(s){
+	var target = symTable.getTarget();
+	target.consume(s);
 	_consumer.consume(s);
 }
 
@@ -81,7 +90,7 @@ function visitfdstmt(node){
 	return visitchildren(node)
 	.then(function(){
 		_test();
-		postMessage({ "type":"command", "name":"fd", "amount":stack.pop(), "target":symTable.getTarget() });
+		postMessage({ "type":"command", "name":"fd", "amount":stack.pop()});
 	})
 	.catch(function(e){
 		postError("caught : " + e);
@@ -251,7 +260,6 @@ function visitbooleanval(node){
 		else{
 			stack.push(0);
 		}
-		postMessage({ "type":"command", "name":"fd", "amount":amount });
 	})
 	.catch(function(e){
 		postError("caught : " + e);
@@ -322,10 +330,10 @@ function visitdivterm(node){
 function visitrpttargetsstmt(node){
 	var ch, makePromise;
 	ch = node.children[0];
-	makePromise = function(i){
+	makePromise = function(t){
 		return new Promise(function(resolve, reject){
 			_test();
-			symTable.setTarget(i);
+			symTable.setTarget(t);
 			visitNode(ch).then(function(){
 				resolveLater(resolve, reject);
 			});
@@ -587,9 +595,13 @@ function visitnegate(node){
 	});
 }
 
+function visitactivatedaemonstmt(node){
+	symTable.activateDaemon(node.name);
+}
+
 function visitcallfnstmt(node){
 	var name = node.name, args = "input argument";
-	var f = symTable.getFunction(name);
+	var f = symTable.getFunctionByName(name);
 	if(f){
 		var numSupplied, numArgs = 0;
 		if(f.argsNode){
@@ -798,6 +810,9 @@ function visitNode(node){
 	else if(t=="labelstmt"){
 		return visitlabelstmt(node);
 	}
+	else if(t=="activatedaemonstmt"){
+		return visitactivatedaemonstmt(node);
+	}
 	else{
 		throw "unknown";
 	}
@@ -805,27 +820,28 @@ function visitNode(node){
 
 function setup(){
 	var setupTarget = function(target){
+		var fns;
 		symTable.setTarget(target);
-		var fns = _.values(symTable.setups) || [];
+		fns = symTable.getSetupForTargetType(target.getType());
 		return Promise.each(fns, executeFunction);
 	};
-	console.log('t', _targets);
 	return Promise.each(_targets, setupTarget);
 }
 
 function rundaemons(){
 	var tick, loop, tickTarget;
+	tickTarget = function(target){
+		var fns;
+		symTable.setTarget(target);
+		fns = symTable.getActiveDaemonsForTargetType(target.getType());
+		return Promise.each(fns, executeFunction);
+	};
 	tick = function(){
 		return Promise.each(_targets, tickTarget);
 	};
-	tickTarget = function(target){
-		symTable.setTarget(target);
-		var fns = _.values(symTable.daemons) || [];
-		return Promise.each(fns, executeFunction);
-	};
 	loop = function(){
 		return tick().then(function(){
-			return _delay(0).then(loop);
+			return _delay().then(loop);
 		});
 	};
 	return loop();
@@ -835,11 +851,9 @@ module.exports = {
 	"start": function(tree, consumer, targets){
 		_active = true;
 		_consumer = consumer;
-		_targets = targets;
-		console.log('t0', _targets);
+		_targets = _parseTargets(targets);
 		stack = new Stack();
 		symTable = new SymTable();
-		console.log("start", tree);
 		return visitNode(tree)
 			.then(setup)
 			.then(rundaemons);

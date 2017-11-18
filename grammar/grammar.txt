@@ -235,7 +235,7 @@ return {type:"askstmt", children:[f]};
 
 activatedaemonstmt  = ('activate-daemon') sep* f:fnname eoline
 {
-return {type:"activatedaemonstmt", children:[f]};
+return {type:"activatedaemonstmt", name:f.name};
 }
 
 fdstmt  = ('fd' / 'forward') sep* num:expression eoline
@@ -260,7 +260,7 @@ return {type:"ltstmt", children:[num]};
 
 setstmt = 'setxy' sep* numx:expression sep* numy:expression sep*
 {
-return {type:"setxy", children:[numx,numy]};
+return {type:"setxy", children:[numx, numy]};
 }
 
 rptstmt  = 'rpt' sep* num:expression sep* '[' sep* list:insidefnlist sep* ']' sep*

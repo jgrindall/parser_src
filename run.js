@@ -1,7 +1,24 @@
-const Logo = 				require('./Logo.js');
-const STR =                 "to test fd 1 end to robot-setup setxy 0 0 end to robot-daemon fd 1 end";
+const Logo = require('./Logo.js');
+
+var STR =   "to test fd 1 end";
+
+STR +=      "to setup-rabbit rt 90 activate-daemon daemon-rabbit-eat end";
+
+STR +=      "to setup-robot setxy 0 0 test activate-daemon daemon-robot-walk end";
+
+STR +=      "to daemon-robot-walk fd 1 end";
+
+STR +=      "to daemon-rabbit-eat rt 10 end";
 
 console.log(JSON.stringify(Logo.getTree(STR)));
+
+var targets = [
+    {"type":"robot", "pos":{"x":0, "y":0}, "angle":0},
+    {"type":"robot", "pos":{"x":0, "y":0}, "angle":0},
+    {"type":"robot", "pos":{"x":0, "y":0}, "angle":0},
+    {"type":"robot", "pos":{"x":0, "y":0}, "angle":0},
+    {"type":"rabbit", "pos":{"x":0, "y":0}, "angle":0}
+];
 
 Logo.draw(STR, {consume:function(cmd){
     if(cmd.type === "command"){
@@ -10,11 +27,10 @@ Logo.draw(STR, {consume:function(cmd){
     else if(cmd.type === "error"){
         console.log("ERROR", cmd);
     }
-}}, [0, 1, 2, 3, 4])
+}}, targets)
 .then(function(){
     console.log('done');
 })
 .catch(function(){
     console.log('error', arguments);
 });
-
