@@ -496,7 +496,11 @@ return {type:"numberexpression", children:[n]};
 {
 return {type:"numberexpression", children:[e]};
 }
-/ v:getmyvar
+/ v:getpatchvar
+{
+return {type:"numberexpression", children:[v]};
+}
+/ v:gettargetvar
 {
 return {type:"numberexpression", children:[v]};
 }
@@ -560,7 +564,12 @@ usevar = ':' v:varname
 return {type:"usevar",name:v.name};
 }
 
-getmyvar = 'get-var' sep* v:varname
+getpatchvar = 'get-patch-var' sep* v:varname
+{
+return {type:"getpatchvarstmt",name:v.name};
+}
+
+gettargetvar = 'get-var' sep* v:varname
 {
 return {type:"getvarstmt",name:v.name};
 }

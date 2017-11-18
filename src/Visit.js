@@ -1,6 +1,7 @@
 const Stack = 					require("./Stack");
 const SymTable = 				require("./SymTable");
 const Target = 					require("./Target");
+const Patch = 					require("./Patch");
 const _ = 						require("underscore");
 const Promise = 				require("bluebird");
 
@@ -12,45 +13,6 @@ Promise.resolveLater = function(){
 	}
 	return Promise.resolve();
 };
-
-var getPatchForTarget = function(t){
-	var pos, i, j;
-	pos = t.data.pos;
-	i = Math.round(Math.random()*10);
-	j = Math.round(Math.random()*10);
-	return _patches[i][j];  // a Patch object
-};
-
-var _getPatches = function(){
-	var i, j;
-	_patches = [];
-	for(i = 0; i < 20, i++){
-		_patches[i] = [];
-		for(j = 0; j < 20, j++){
-			_patches[i][j] = new Patch();
-		}
-	}
-	return _patches;
-}
-
-function _parseTargets(targets){
-	return _.map(targets, function(t){
-		return new Target(t);
-	});
-};
-
-function _delay(t) {
-	var res = function(resolve, reject) {
-    	resolveLater(resolve, reject, t);
-	};
-	return new Promise(res);
-}
-
-function _test(){
-	if(!_active){
-		throw "error";
-	}
-}
 
 function resolveLater(resolve, reject, t){
 	if(typeof t === 'undefined'){
@@ -64,6 +26,44 @@ function resolveLater(resolve, reject, t){
 			resolve();
 		}
 	}, t);
+}
+
+var _getPatchForTarget = function(target){
+	var pos, i, j;
+	pos = target.data.pos;
+	i = Math.round(Math.random()*10);
+	j = Math.round(Math.random()*10);
+	return _patches[i][j];  // a Patch object
+};
+
+var _getPatches = function(){
+	var i, j;
+	_patches = [];
+	for(i = 0; i < 20; i++){
+		_patches[i] = [];
+		for(j = 0; j < 20; j++){
+			_patches[i][j] = new Patch();
+		}
+	}
+	return _patches;
+}
+
+function _parseTargets(targets){
+	return _.map(targets, function(t){
+		return new Target(t);
+	});
+}
+
+function _delay(t) {
+	return new Promise(function(resolve, reject) {
+    	resolveLater(resolve, reject, t);
+	});
+}
+
+function _test(){
+	if(!_active){
+		throw "error";
+	}
 }
 
 function postError(msg){
@@ -308,6 +308,7 @@ function visitexpression(node){
 		for(i = 0; i<node.children.length; i++){
 			num += stack.pop();
 		}
+		console.log("push", num);
 		stack.push(num);
 	})
 	.catch(function(e){
@@ -323,6 +324,7 @@ function visitmultexpression(node){
 		for(i = 0; i < node.children.length; i++){
 			num *= stack.pop();
 		}
+		console.log("push", num);
 		stack.push(num);
 	})
 	.catch(function(e){
@@ -404,6 +406,7 @@ function visitnumber(node){
 		stack.push(Math.floor(Math.random() * 100));
 	}
 	else{
+		console.log("push", node.value);
 		stack.push(node.value);
 	}
 	return Promise.resolveLater();
@@ -446,6 +449,7 @@ function visittimesordivterms(node){
 		for(var i = 0; i < l; i++){
 			num *= stack.pop();
 		}
+		console.log("push", num);
 		stack.push(num);
 	})
 	.catch(function(e){
@@ -488,6 +492,15 @@ function visitgetvarstmt(node){
 	_test();
 	target = symTable.getTarget();
 	stack.push(target.getVar(node.name));
+	return Promise.resolveLater();
+}
+
+function visitgetpatchvarstmt(node){
+	var target, patch;
+	_test();
+	target = symTable.getTarget();
+	patch = _getPatchForTarget(target);
+	stack.push(patch.getVar(node.name));
 	return Promise.resolveLater();
 }
 
@@ -626,8 +639,7 @@ function visitnegate(node){
 function visitsetvarstmt(node){
 	return visitchildren(node)
 	.then(function(){
-		var val = stack.pop();
-		symTable.getTarget().setVar(node.name, val);
+		symTable.getTarget().setVar(node.name, stack.pop());
 	});
 }
 
@@ -827,6 +839,9 @@ function visitNode(node){
 	}
 	else if(t=="getvarstmt"){
 		return visitgetvarstmt(node);
+	}
+	else if(t=="getpatchvarstmt"){
+		return visitgetpatchvarstmt(node);
 	}
 	else if(t=="usevar"){
 		return visitusevar(node);

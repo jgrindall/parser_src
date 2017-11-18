@@ -24,6 +24,7 @@ Target.prototype.consume = function (msg) {
 };
 
 Target.prototype.setVar = function(name, val){
+	console.log("target sets", name, val);
 	this.data.vars[name] = val;
 };
 
