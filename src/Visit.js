@@ -4,7 +4,7 @@ const Target = 					require("./Target");
 const _ = 						require("underscore");
 const Promise = 				require("bluebird");
 
-var stack, symTable, _active = false, _consumer, _target;
+var stack, symTable, _active = false, _consumer, _target, _patches;
 
 Promise.resolveLater = function(){
 	if(!_active){
@@ -12,6 +12,26 @@ Promise.resolveLater = function(){
 	}
 	return Promise.resolve();
 };
+
+var getPatchForTarget = function(t){
+	var pos, i, j;
+	pos = t.data.pos;
+	i = Math.round(Math.random()*10);
+	j = Math.round(Math.random()*10);
+	return _patches[i][j];  // a Patch object
+};
+
+var _getPatches = function(){
+	var i, j;
+	_patches = [];
+	for(i = 0; i < 20, i++){
+		_patches[i] = [];
+		for(j = 0; j < 20, j++){
+			_patches[i][j] = new Patch();
+		}
+	}
+	return _patches;
+}
 
 function _parseTargets(targets){
 	return _.map(targets, function(t){
@@ -463,6 +483,14 @@ function visitplusexpression(node){
 	return visitchildren(node);
 }
 
+function visitgetvarstmt(node){
+	var target;
+	_test();
+	target = symTable.getTarget();
+	stack.push(target.getVar(node.name));
+	return Promise.resolveLater();
+}
+
 function visitusevar(node){
 	var num = symTable.get(node.name);
 	_test();
@@ -592,6 +620,14 @@ function visitnegate(node){
 	})
 	.catch(function(e){
 		postError("caught : " + e);
+	});
+}
+
+function visitsetvarstmt(node){
+	return visitchildren(node)
+	.then(function(){
+		var val = stack.pop();
+		symTable.getTarget().setVar(node.name, val);
 	});
 }
 
@@ -789,6 +825,9 @@ function visitNode(node){
 	else if(t=="booleanval"){
 		return visitbooleanval(node);
 	}
+	else if(t=="getvarstmt"){
+		return visitgetvarstmt(node);
+	}
 	else if(t=="usevar"){
 		return visitusevar(node);
 	}
@@ -812,6 +851,9 @@ function visitNode(node){
 	}
 	else if(t=="activatedaemonstmt"){
 		return visitactivatedaemonstmt(node);
+	}
+	else if(t=="setvarstmt"){
+		return visitsetvarstmt(node);
 	}
 	else{
 		throw "unknown";
@@ -851,6 +893,7 @@ module.exports = {
 	"start": function(tree, consumer, targets){
 		_active = true;
 		_consumer = consumer;
+		_patches = _getPatches();
 		_targets = _parseTargets(targets);
 		stack = new Stack();
 		symTable = new SymTable();

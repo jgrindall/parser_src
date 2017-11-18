@@ -1,6 +1,7 @@
 
 var Target = function(data){
-	this.data = data;
+	this.data = data || {};
+	this.data.vars = {};
 };
 
 Target.prototype.getType = function () {
@@ -20,6 +21,18 @@ Target.prototype.consume = function (msg) {
 			this.data.pos.y = msg.amountY;
 		}
 	}
+};
+
+Target.prototype.setVar = function(name, val){
+	this.data.vars[name] = val;
+};
+
+Target.prototype.getVar = function(name){
+	var v = this.data.vars[name];
+	if(typeof v === "undefined"){
+		v = 0;
+	}
+	return v;
 };
 
 module.exports = Target;

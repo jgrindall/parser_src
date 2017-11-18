@@ -18,8 +18,11 @@ module.exports = {
 	},
 	"draw":function(logo, consumer, targets){
 		var tree = _getTree(logo);
-		if(tree && consumer){
+		if(tree && consumer && targets){
 			return Visit.start(tree, consumer, targets);
+		}
+		else{
+			throw "wrong input";
 		}
 	},
 	"stop":function(){
