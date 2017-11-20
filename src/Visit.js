@@ -664,7 +664,7 @@ function visitcallfnstmt(node){
 		}
 		else{
 			symTable.enterBlock();
-			visitchildren(node.args)
+			return visitchildren(node.args)
 			.then(function(){
 				_test();
 				return executeFunction(f)
